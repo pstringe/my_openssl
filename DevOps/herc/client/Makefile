@@ -1,5 +1,5 @@
 CC = gcc
-INC = ./libft
+INC = ../hydra/libft
 NAME = client
 SRCS = client.c
 OBJS = $(patsubst %.c, %.o, $(SRCS))
@@ -13,8 +13,8 @@ DOBJS = $(patsubst %.c, %.o, $(DSRCS))
 
 all: $(NAME)
 
-libft.a : ./libft/Makefile
-	make -C ./libft/
+libft.a : ../hydra/libft/Makefile
+	make -C ../hydra/libft/
 $(NAME): libft.a $(OBJS)
 	$(CC) $(OFLAGS)
 
