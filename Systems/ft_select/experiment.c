@@ -1,0 +1,105 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   experiment.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2018/05/07 18:37:21 by pstringe          #+#    #+#             */
+/*   Updated: 2018/05/08 08:14:44 by pstringe         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include <curses.h>
+#include <libft.h>
+#include <term.h>
+#include <unistd.h>
+#include <stdlib.h>
+
+extern char PC;
+extern char *UP;
+extern char *BC;
+extern short ospeed;
+
+void	fatal(char *msg)
+{
+	ft_putendl(msg);
+	exit(-1);
+}
+
+/*
+**	an application that needs to use termcaps must first retrieve a description
+**	of the terminal. this is done using the function, tgetent()
+*/
+
+void	init_terminal_data()
+{
+	//static char buf[1024];
+	char		*termtype;
+	int			success;
+
+	if (!(termtype = getenv("TERM")))
+		fatal("specify terminal type with export `TERM=<termtype>'");
+	ft_putendl(termtype);
+	if ((success = tgetent(NULL, termtype) < 0))
+		fatal("Could not access termcap database.");
+	else if (!success)
+		ft_putendl("Terminal name  is not defined");
+	else
+		ft_putendl("Got the description");
+
+}	
+
+/*
+**	Each piece of information recorded in the terminal description is refered to 
+**	as a "capability".
+**	Each "capability" is represented by a two-letter code.
+**	Once the program has a rettrieved a terminal description, it must interrogate
+**	the description for capabilities.
+**	The values of capabilities will be either numeric, boolean, or string type.
+**	tgetnum(), tgetflag and tgetstr() may be used to retrieve the values of
+**	capabilities depending on their type.
+**	Each of these functions take the capability's two-letter code as the first
+**	argument. Only tgetstr() takes a second argument, which is the address of a
+**	buffer to be populated with a capability's value.
+**	It is important to initialize the terminal description using tgetent(),
+**	as these functions all make use of the description retrieved in it's most
+**	recent call.
+*/
+
+void	interrogate_terminal()
+{
+	char	*tmp;
+	char	*cl_string;
+	char	*cm_string;
+	int		height;
+	int		width;
+	int		auto_wrap;
+	
+	//information for application
+	cl_string = tgetstr("cl", NULL);
+	cm_string = tgetstr("cm", NULL);
+	auto_wrap = tgetflag("am");
+	height = tgetnum("co");
+	width = tgetnum("co");
+
+	//information for termcap functions
+	tmp = tgetstr("pc", NULL);
+	PC = tmp ? *tmp : 0;
+	BC = tgetstr("le", NULL);
+	UP = tgetstr("up", NULL);
+
+	ft_putendl(cl_string);
+	ft_putendl(cm_string);
+	ft_putendl(auto_wrap ? "true" : "false");
+	ft_putnbr(height);
+	ft_putnbr(width);
+
+}
+
+int		main(void)
+{
+	init_terminal_data();
+	interrogate_terminal();
+	return (0);
+}
