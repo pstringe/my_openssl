@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/07 18:37:21 by pstringe          #+#    #+#             */
-/*   Updated: 2018/05/09 14:48:48 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/05/09 15:39:45 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,25 +126,22 @@ void	restore_default_behavior(struct termios *term)
 		fatal("unable to set attributes while restoring defaults");
 }
 
-void	identify_key()
-{
-	char buf[4];
-
-	while (1)
-	{
-		read(0, buf, 3);
-		buf[3] = '\0';
-		ft_putendl(buf);
-		if (buf[0] == 4)
-			break;
-	}
-}
+/*
+**	this is the ouput function for tputs. I would have used ft_putchar but 
+**	the function must return an int. And now I understand that the command
+**	won't take affect unless they are output to standard in.
+*/
 
 int		ft_pc(int c)
 {
 	write(0, &c, 1);
 	return (0);
 }
+
+/*
+**	this function uses t_puts to output the string returned from stgetstr to
+**	stdin. the string is the command which would be used to clear the screen.
+*/
 
 void	c_s()
 {
@@ -157,6 +154,66 @@ void	c_s()
 }
 
 /*
+**	this function should change the position of the cursor 
+*/
+
+typedef struct 	s_pos
+{
+	int x;
+	int y;
+}				t_pos;
+
+void	update_position(t_pos *pos, char a)
+{
+	char	*str;
+
+	if (a == 'D')
+		pos->x--;
+	else if (a == 'A')
+		pos->y++;
+	else if (a == 'C')
+		pos->x++;
+	else if (a == 'B')
+		pos->y--;
+	else
+	{
+		ft_putchar(a);
+		fatal("YO! You're pretty weak on this logic shit aren't you?");
+	}
+	str = tgetstr("cm", NULL);
+	tputs(tgoto(str, pos->x, pos->y), 1, ft_pc);
+}
+
+/*
+**	here I launch launch the clear screen command using a key event
+*/
+
+void	identify_key()
+{
+	char 	buf[4];
+	t_pos	cur_pos;
+
+	cur_pos.x = 0;
+	cur_pos.y = 0;
+	while (1)
+	{
+		read(0, buf, 3);
+		buf[3] = '\0';
+		ft_putendl(buf);
+
+		if (buf[0] == 27)
+			update_position(&cur_pos, buf[2]);
+		else if (buf[0] == 4)
+		{
+			c_s();
+			break;
+		}
+	}
+}
+
+
+
+/*
 **	Now, in order to use tputs() to specify padding, I'll need
 **	to have, (1) the command string (in which the padding spec is contained),
 **	(2) the number of lines affected by the command, (3) a function to output
@@ -165,6 +222,7 @@ void	c_s()
 **	padding character (most likley null), ospeed, being the output speed of the
 **	terminal.
 */
+
 int		main(void)
 {
 	struct termios term;
@@ -173,7 +231,6 @@ int		main(void)
 	///interrogate_terminal();
 	modify_terminal(&term);
 	identify_key();
-	c_s();
 	restore_default_behavior(&term);
 	return (0);
 }
