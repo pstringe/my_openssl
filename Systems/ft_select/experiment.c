@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/07 18:37:21 by pstringe          #+#    #+#             */
-/*   Updated: 2018/05/09 14:17:10 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/05/09 14:48:48 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,6 +94,13 @@ void	interrogate_terminal()
 
 }
 
+/*
+**	modifications of this struct are done by using syscalls encoded as
+**	integers, I glanced over this while reading the bsd icotl source but
+**	it may be worth looking into since this seems to be a significant part
+**	of what it takes to get things done using this library.
+*/
+
 void	modify_terminal(struct termios *term)
 {
 	term->c_lflag &= ~(ICANON);
@@ -103,6 +110,12 @@ void	modify_terminal(struct termios *term)
 	if (tcsetattr(0, TCSADRAIN, term) == -1)
 		fatal("unable to set modified attributes in terminos struct");
 }
+
+/*
+**	It's essential to restore default behavior of the shell after any 
+**	modification of the termios struct. (Remember the time you fucked up
+**	your shell while experimenting)
+*/
 
 void	restore_default_behavior(struct termios *term)
 {
@@ -126,6 +139,23 @@ void	identify_key()
 			break;
 	}
 }
+
+int		ft_pc(int c)
+{
+	write(0, &c, 1);
+	return (0);
+}
+
+void	c_s()
+{
+	char *str;
+
+	if (!(str = tgetstr("cl", NULL)))
+		fatal("failed to interrogate terminal");
+	ft_putendl(str);
+	tputs(str, 0, ft_pc);
+}
+
 /*
 **	Now, in order to use tputs() to specify padding, I'll need
 **	to have, (1) the command string (in which the padding spec is contained),
@@ -140,9 +170,10 @@ int		main(void)
 	struct termios term;
 
 	init_terminal_data(&term);
-	interrogate_terminal();
+	///interrogate_terminal();
 	modify_terminal(&term);
 	identify_key();
+	c_s();
 	restore_default_behavior(&term);
 	return (0);
 }
