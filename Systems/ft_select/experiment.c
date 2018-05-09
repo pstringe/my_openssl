@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/07 18:37:21 by pstringe          #+#    #+#             */
-/*   Updated: 2018/05/08 08:14:44 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/05/09 13:51:44 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,7 @@
 #include <term.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
 
 extern char PC;
 extern char *UP;
@@ -32,22 +33,18 @@ void	fatal(char *msg)
 **	of the terminal. this is done using the function, tgetent()
 */
 
-void	init_terminal_data()
+void	init_terminal_data(struct termios *term)
 {
-	//static char buf[1024];
-	char		*termtype;
-	int			success;
+	char			*termtype;
+	int				success;
 
 	if (!(termtype = getenv("TERM")))
 		fatal("specify terminal type with export `TERM=<termtype>'");
 	ft_putendl(termtype);
 	if ((success = tgetent(NULL, termtype) < 0))
 		fatal("Could not access termcap database.");
-	else if (!success)
-		ft_putendl("Terminal name  is not defined");
-	else
-		ft_putendl("Got the description");
-
+	else if (tcgetattr(0, term) == -1) 
+		fatal("Unable to get terminos struct");
 }	
 
 /*
@@ -97,9 +94,31 @@ void	interrogate_terminal()
 
 }
 
+void	modify_terminal(struct termios *term)
+{
+	term->c_lflag &= ~(ICANON);
+	term->c_lflag &= ~(ECHO);
+	term->c_cc[VMIN] = 1;
+	term->c_cc[VTIME] = 0;
+	if (tcsetattr(0, TCSADRAIN, term) == -1)
+		fatal("unable to set modified attributes in terminos struct");
+}
+
+/*
+**	Now, in order to use tputs() to specify padding, I'll need
+**	to have, (1) the command string (in which the padding spec is contained),
+**	(2) the number of lines affected by the command, (3) a function to output
+**	characters one by one and return an int.
+**	I'll need to make use of the global variables, PC, and ospeed. PC, being the
+**	padding character (most likley null), ospeed, being the output speed of the
+**	terminal.
+*/
 int		main(void)
 {
-	init_terminal_data();
-	interrogate_terminal();
+	struct termios term;
+
+	init_terminal_data(&term);
+	//interrogate_terminal();
+	modify_terminal(&term);
 	return (0);
 }
