@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/07 18:37:21 by pstringe          #+#    #+#             */
-/*   Updated: 2018/05/09 13:51:44 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/05/09 14:05:48 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,15 @@ void	modify_terminal(struct termios *term)
 		fatal("unable to set modified attributes in terminos struct");
 }
 
+void	restore_default_behavior(struct termios *term)
+{
+	if (tcgetattr(0, term) == -1)
+		fatal("unable to set attributes while restoring defaults");
+	term->c_lflag = (ICANON | ECHO);
+	if (tcsetattr(0, 0, term) == -1)
+		fatal("unable to set attributes while restoring defaults");
+}
+
 /*
 **	Now, in order to use tputs() to specify padding, I'll need
 **	to have, (1) the command string (in which the padding spec is contained),
@@ -118,7 +127,8 @@ int		main(void)
 	struct termios term;
 
 	init_terminal_data(&term);
-	//interrogate_terminal();
+	interrogate_terminal();
 	modify_terminal(&term);
+	restore_default_behavior(&term);
 	return (0);
 }
