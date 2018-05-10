@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/05/07 18:37:21 by pstringe          #+#    #+#             */
-/*   Updated: 2018/05/09 15:39:45 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/05/10 01:44:55 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -170,11 +170,11 @@ void	update_position(t_pos *pos, char a)
 	if (a == 'D')
 		pos->x--;
 	else if (a == 'A')
-		pos->y++;
+		pos->y--;
 	else if (a == 'C')
 		pos->x++;
 	else if (a == 'B')
-		pos->y--;
+		pos->y++;
 	else
 	{
 		ft_putchar(a);

@@ -1,7 +1,9 @@
 CC = gcc
 INC = ./libft
 NAME = ft_select
-SRCS = experiment.c
+SRCS = ft_select.c\
+	   terminal.c\
+	   clist.c
 OBJS = $(patsubst %.c, %.o, $(SRCS))
 LIBD = -L$(INC) -lft -ltermcap
 CFLAGS = -g -Wall -Werror -Wextra -I$(INC) 
