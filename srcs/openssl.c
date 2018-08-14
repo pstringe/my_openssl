@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/13 07:11:57 by pstringe          #+#    #+#             */
-/*   Updated: 2018/08/14 11:08:50 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/08/14 14:20:57 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,8 +92,27 @@ void	sha(t_args *args)
 
 void	get_msg(t_args *args, int idx, char **argv, int argc)
 {
-	if (idx < argc && argv[idx][0] != '-')
+	int 	fd;
+	char 	*line;
+	char	*tmp;
+
+	fd = 0;
+	if ((fd = open(argv[idx], O_RDONLY)) >= 0)
+	{
+		while (get_next_line(fd, &line) > 0)
+		{
+			tmp = args->msg ? ft_strdup(args->msg) : NULL;
+			if (args->msg)
+				free(args->msg);
+			args->msg = ft_strjoin(tmp, line);
+			if (line)
+				free(line);
+		}
+	}
+	else if (idx < argc && argv[idx])
 		args->msg = ft_strdup(argv[idx]);
+	else
+		ft_printf("no argument\n");
 }
 
 int		main(int argc, char **argv)

@@ -6,7 +6,7 @@
 #    By: pstringe <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2018/08/02 14:49:53 by pstringe          #+#    #+#              #
-#    Updated: 2018/08/13 14:18:45 by pstringe         ###   ########.fr        #
+#    Updated: 2018/08/14 13:40:26 by pstringe         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -21,14 +21,14 @@ SRCS = openssl
 OBJS = $(patsubst $(SRCD)%, %.o, $(SRCS))
 CFLAGS = -Wall -Werror -Wextra
 DFLAGS = -g
-SFLAGS = -fsanitize -fno-omit-frame-pointer
+SFLAGS = -fsanitize=address -fno-omit-frame-pointer
 
 all: $(NAME)
 $(NAME): $(INCD)$(LIB)
 	$(CC) $(CFLAGS) -o $(NAME) $(patsubst %, $(SRCD)%.c, $(SRCS)) -L$(LIBD) -lft -I $(INCD) 
-debug: fclean $(LIB)
+debug: fclean $(INCD)$(LIB)
 	$(CC) $(CFLAGS) $(DFLAGS) -o $(NAME) $(patsubst %, $(SRCD)%.c, $(SRCS)) -L$(LIBD) -lft -I $(INCD)
-sanitize: fclean $(LIB)
+sanitize: fclean $(INCD)$(LIB)
 	$(CC) $(CFLAGS) $(SFLAGS) -o $(NAME) $(patsubst %, $(SRCD)%.c, $(SRCS)) -L$(LIBD) -lft -I $(INCD)
 $(INCD)$(LIB):
 	make -C $(INCD)libft
@@ -40,5 +40,5 @@ fclean: clean
 	make -C $(INCD)libft fclean
 	rm -rf $(NAME)
 re: fclean
-	$(NAME)
+	make
 
