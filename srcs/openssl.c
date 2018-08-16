@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/13 07:11:57 by pstringe          #+#    #+#             */
-/*   Updated: 2018/08/14 20:09:24 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/08/15 18:15:02 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,6 +122,56 @@ void	get_msg(t_args *args, int idx, char **argv, int argc)
 		ft_printf("no argument\n");
 }
 
+void	print_block(char block[64])
+{
+	int i;
+	int j;
+	int k;
+	
+	i = 0;
+	while (++i <= 4)
+	{
+		j = 0;
+		while (++j <= 4)
+		{
+			k = 0;
+			while (++k <= 4)
+				ft_putchar(block[(i % j) * (j % k)]);
+			ft_putchar(' ');
+		}
+		ft_putchar('\n');
+	}
+}
+
+t_queue		*ft_queuenw(void *n, size_t size)
+{
+	t_queue	*q;
+	t_list	*tmp;
+
+	q = (t_queue*)ft_memalloc(sizeof(t_queue));
+	tmp = ft_lstnew(n, size);
+	q->tail = tmp;
+	q->head = tmp;
+	return (q);
+}
+
+void		*ft_dequeue(struct s_queue *q)
+{
+	t_list		*tmp;
+	void		*t;
+
+	if (!q->head)
+		return (NULL);
+	tmp = q->head;
+	q->head = tmp->next;
+	t = ft_memalloc(tmp->content_size);
+	ft_memcpy(t, tmp->content, tmp->content_size);
+	ft_memdel((void**)&(tmp->content));
+	ft_memdel((void**)&tmp);
+	if (!q->head)
+		q->tail = NULL;
+	return (t);
+}
 /*
 **	split the message into 512bit (64 byte blocks) and pad up to 48bits
 **	with the last 64 bits representing the length of the original message
@@ -129,13 +179,14 @@ void	get_msg(t_args *args, int idx, char **argv, int argc)
 
 void	get_blocks(t_args *args)
 {
-	uint64_t 	len;
-	size_t 		blocks;
-	size_t 		remainder;
+	uint64_t	len;
+	int 		blocks;
+	int	 		remainder;
 	char		block[64];
 	int			i;
 	int 		j;
-	
+	int			k;
+
 	//establish length of original message
 	len = ft_strlen(args->msg);
 
@@ -147,34 +198,41 @@ void	get_blocks(t_args *args)
 	i = 0;
 
 	//this loop will execute, if and only if there are enough characters to form at least one complete block.
-	while (--blocks)
+	while (--blocks > 0)
 	{
 		//copy 64 bytes from the msg text to a block
 		ft_memcpy(block, args->msg + i, 64);
-		//enque a copy of this block 
-		ft_enqueue(args->blocks, ft_strdup(block), 64 + 1);
+		//enque a copy of this block
+		if (!args->blocks)
+			args->blocks = ft_queuenw(ft_strdup(block), 64 + 1);
+		else
+			ft_enqueue(args->blocks, ft_strdup(block), 64 + 1);
 		//increment the index by the number of copied bytes
 		i += 64;
 	}
-
 	//copy the remaining number of bytes in the msg text over to bloc
 	ft_memcpy(block, args->msg + i, len % 64);
+	
+	//initialize the queue in the event there was <= 1 blocks worth of text
+	if (!args->blocks)
+		args->blocks = ft_queuenw(ft_strdup(block), 64 + 1);
 
 	//increment i by the remaining number of bytes
 	i += len % 64;
 
 	//I append a bit to the end of the msg text by ORing it against that index
-	block[i] |= (1 << 8);
+	block[i] |= (1 << 7);
 
 	//I pad the block with null characters until the index is 64bits shy of a complete block
-	while (++i < (blocks + 1) * 64 - 8)
+	while (++i < 64 - 8)
 		block[i] = '\0';
 
 	//I use the last 64 bits to represent the original length of the msg
 	ft_bzero(&block[i], 8);
 	j = 8;
+	k = 8;
 	while(i < 64 && j >= 0)
-		block[i++] |= (0xff << j);
+		block[i++] |= (((0xff << --j) & len) >> --k);
 } 
 
 int		main(int argc, char **argv)
@@ -184,5 +242,17 @@ int		main(int argc, char **argv)
 	args = init_ssl();
 	get_msg(args, parse(args, argc, argv), argv, argc);
 	get_blocks(args);
+	/*test*/
+	int 	i = -1;
+	char 	*block;
+	while ((block = (char*)ft_dequeue(args->blocks)))
+	{
+		ft_printf("block %d:\n", ++i);
+		int j = -1;
+		while (++j < 65)
+			ft_putchar(block[j] < 41 ? '.' : block[j]);
+		ft_putchar('\n');
+	}
+	/*end test*/
 	args->cmd->func(args);
 }
