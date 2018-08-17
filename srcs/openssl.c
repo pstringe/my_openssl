@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/13 07:11:57 by pstringe          #+#    #+#             */
-/*   Updated: 2018/08/16 18:14:42 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/08/16 18:27:38 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -199,7 +199,7 @@ void	get_blocks(t_args *args)
 	i = 0;
 
 	//this loop will execute, if and only if there are enough characters to form at least one complete block.
-	while (--blocks > 0)
+	while (blocks-- > 0)
 	{
 		//copy 64 bytes from the msg text to a block
 		ft_memcpy(block, args->msg + i, 64);
