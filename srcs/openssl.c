@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/13 07:11:57 by pstringe          #+#    #+#             */
-/*   Updated: 2018/08/16 18:27:38 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/08/16 19:36:50 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -211,10 +211,12 @@ void	get_blocks(t_args *args)
 		//increment the index by the number of copied bytes
 		i += 64;
 	}
+	//zero out the block
+	ft_bzero(block, 64);
+
 	//copy the remaining number of bytes in the msg text over to bloc
 	ft_memcpy(block, args->msg + i, len % 64);
 	
-
 	//increment i by the remaining number of bytes
 	i += len % 64;
 
@@ -229,7 +231,7 @@ void	get_blocks(t_args *args)
 		block[j] = '\0';
 
 	//I use the last 64 bits to represent the original length of the msg
-	ft_bzero(&block[j], 8);
+	//ft_bzero(&block[j], 8);
 	
 	k = 8; //bit mask shift
 	l = 8; //shift on the resulting bit mask to the least significant place value
@@ -241,7 +243,7 @@ void	get_blocks(t_args *args)
 		 * shift them to the least significant place value, and OR them against the current byte
 		 *  in the block
 		 */
-		block[j++] |= (((0xff << --k) & len) >> --l);
+		block[j++] |= (((0x00000000000000ff << ((--k) * 8)) & len) >> (--l) * 8);
 	
 	//initialize the queue in the event there was <= 1 blocks worth of text
 	if (!args->blocks)
