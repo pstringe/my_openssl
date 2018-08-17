@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/13 07:11:57 by pstringe          #+#    #+#             */
-/*   Updated: 2018/08/15 18:15:02 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/08/16 18:14:42 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -183,9 +183,10 @@ void	get_blocks(t_args *args)
 	int 		blocks;
 	int	 		remainder;
 	char		block[64];
-	int			i;
-	int 		j;
-	int			k;
+	int			i; //position in the original message
+	int 		j; //position in padding block
+	int			k; //bit mask
+	int			l; //shift the result of the bit mask to least significant place-value
 
 	//establish length of original message
 	len = ft_strlen(args->msg);
@@ -204,35 +205,49 @@ void	get_blocks(t_args *args)
 		ft_memcpy(block, args->msg + i, 64);
 		//enque a copy of this block
 		if (!args->blocks)
-			args->blocks = ft_queuenw(ft_strdup(block), 64 + 1);
+			args->blocks = ft_queuenw(ft_strdup(block), 64);
 		else
-			ft_enqueue(args->blocks, ft_strdup(block), 64 + 1);
+			ft_enqueue(args->blocks, ft_strdup(block), 64);
 		//increment the index by the number of copied bytes
 		i += 64;
 	}
 	//copy the remaining number of bytes in the msg text over to bloc
 	ft_memcpy(block, args->msg + i, len % 64);
 	
-	//initialize the queue in the event there was <= 1 blocks worth of text
-	if (!args->blocks)
-		args->blocks = ft_queuenw(ft_strdup(block), 64 + 1);
 
 	//increment i by the remaining number of bytes
 	i += len % 64;
 
+	//set j to the remaining no of bytes
+	j = len % 64;
+
 	//I append a bit to the end of the msg text by ORing it against that index
-	block[i] |= (1 << 7);
+	block[j] |= (1 << 7);
 
 	//I pad the block with null characters until the index is 64bits shy of a complete block
-	while (++i < 64 - 8)
-		block[i] = '\0';
+	while (++j < 64 - 8)
+		block[j] = '\0';
 
 	//I use the last 64 bits to represent the original length of the msg
-	ft_bzero(&block[i], 8);
-	j = 8;
-	k = 8;
-	while(i < 64 && j >= 0)
-		block[i++] |= (((0xff << --j) & len) >> --k);
+	ft_bzero(&block[j], 8);
+	
+	k = 8; //bit mask shift
+	l = 8; //shift on the resulting bit mask to the least significant place value
+	
+	//for each of the remaining 8 bytes, on the block,
+	while(j < 64 && k >= 0)
+		/* 
+		 * isolate the appropriate bits from the total length starting with the most significant,
+		 * shift them to the least significant place value, and OR them against the current byte
+		 *  in the block
+		 */
+		block[j++] |= (((0xff << --k) & len) >> --l);
+	
+	//initialize the queue in the event there was <= 1 blocks worth of text
+	if (!args->blocks)
+		args->blocks = ft_queuenw(ft_strdup(block), 64 + 1);
+	else
+		ft_enqueue(args->blocks, ft_strdup(block), 64);
 } 
 
 int		main(int argc, char **argv)
