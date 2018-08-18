@@ -6,7 +6,7 @@
 /*   By: pstringe <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2018/08/13 07:11:57 by pstringe          #+#    #+#             */
-/*   Updated: 2018/08/17 09:17:57 by pstringe         ###   ########.fr       */
+/*   Updated: 2018/08/18 09:44:32 by pstringe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -122,20 +122,24 @@ void	get_msg(t_args *args, int idx, char **argv, int argc)
 		ft_printf("no argument\n");
 }
 
-void	print_block(t_args *args)
+void	print_blocks(t_args *args)
 {
 	int 	i;
 	int		j;
-	char 	*block;
+	t_list	*tmp;
+	char	*block;
 	
+	tmp = args->blocks->head;
 	i = -1;
-	while ((block = (char*)ft_dequeue(args->blocks)))
+	while (tmp)
 	{
+		block = (char*)tmp->content;
 		ft_printf("block %d:\n", ++i);
 		j = -1;
 		while (++j < 65)
 			ft_putchar(block[j] < 41 ? '.' : block[j]);
 		ft_putchar('\n');
+		tmp = tmp->next;
 	}
 }
 
@@ -212,6 +216,6 @@ int		main(int argc, char **argv)
 	args = init_ssl();
 	get_msg(args, parse(args, argc, argv), argv, argc);
 	get_blocks(args);
-	print_block(args);
+	print_blocks(args);
 	args->cmd->func(args);
 }
